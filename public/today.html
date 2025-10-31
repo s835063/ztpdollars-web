@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>今日新增紀錄</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #fafafa; }
+    .header {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 20px;
+      gap: 20px;
+    }
+    h1 { margin: 0; }
+    .back-btn {
+      padding: 6px 12px;
+      font-size: 14px;
+      border: none;
+      border-radius: 6px;
+      background: #1976d2;
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .back-btn:hover { background: #0d47a1; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      box-shadow: 2px 2px 6px rgba(0,0,0,0.1);
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 6px;
+      text-align: center;
+      font-size: 14px;
+    }
+    th { background: #eee; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>今日新增紀錄</h1>
+    <button class="back-btn" onclick="location.href='index.html'">返回首頁</button>
+  </div>
+
+  <table id="todayTable">
+    <tr>
+      <th>時間</th>
+      <th>班級</th>
+      <th>座號</th>
+      <th>姓名</th>
+      <th>項目</th>
+      <th>標準</th>
+      <th>點數</th>
+    </tr>
+  </table>
+
+  <script>
+    async function fetchToday() {
+      try {
+        const res = await fetch('/api/points');
+        const data = await res.json();
+
+        // 取得今天日期 (YYYY-MM-DD)
+        const today = new Date().toISOString().split("T")[0];
+
+        // 過濾出今天的資料
+        const todayData = data.filter(d => d.created_at && d.created_at.startsWith(today));
+
+        // 排序：依時間先後
+        const sorted = todayData.sort((a,b)=>{
+          return new Date(a.created_at) - new Date(b.created_at);
+        });
+
+        const table = document.getElementById("todayTable");
+        sorted.forEach(d=>{
+          const tr = document.createElement("tr");
+
+          // 使用 toLocaleTimeString() 顯示時:分:秒
+          let timeStr = '';
+          if(d.created_at){
+            const dateObj = new Date(d.created_at);
+            timeStr = dateObj.toLocaleTimeString('zh-TW', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+          }
+
+          tr.innerHTML = `
+            <td>${timeStr}</td>
+            <td>${d.class}</td>
+            <td>${d.seat_no}</td>
+            <td>${d.name}</td>
+            <td>${d.item}</td>
+            <td>${d.standard}</td>
+            <td>${d.score}</td>
+          `;
+          table.appendChild(tr);
+        });
+
+        if(sorted.length === 0){
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td colspan="7">今日尚無新增資料</td>`;
+          table.appendChild(tr);
+        }
+
+      } catch(err) {
+        console.error("載入失敗", err);
+      }
+    }
+
+    fetchToday();
+  </script>
+</body>
+</html>

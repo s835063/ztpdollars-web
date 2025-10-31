@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <title>中壇幣集點網站</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- 標題 -->
+    <h1 class="title">中壇國小期末跳蚤市場中壇幣集點</h1>
+
+    <!-- 角色切換 -->
+    <div class="role-container">
+        <label>身份：
+            <select id="roleSelect">
+                <option value="guest">訪客</option>
+                <option value="admin">管理員</option>
+            </select>
+        </label>
+    </div>
+
+<button onclick="exportBackup()" style="margin: 10px; padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">
+  匯出 Excel 備份
+</button>
+
+<script>
+async function exportBackup() {
+  try {
+    const response = await fetch('/api/export-backup');
+    if (!response.ok) throw new Error('匯出失敗');
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = response.headers.get('content-disposition')?.match(/filename="(.+)"/)?.[1] || 'backup.xlsx';
+    a.click();
+    window.URL.revokeObjectURL(url);
+  } catch (err) {
+    alert('匯出失敗：' + err.message);
+  }
+}
+</script>
+
+
+    <!-- 新增資料表單 -->
+    <div id="formContainer">
+        <label>班級：
+            <select id="classSelect">
+                <option value="">選擇班級</option>
+            </select>
+        </label>
+
+        <label>學生：
+            <select id="studentSelect">
+                <option value="">選擇學生</option>
+            </select>
+        </label>
+
+        <label>項目：
+            <select id="itemSelect">
+                <option value="">選擇項目</option>
+            </select>
+        </label>
+
+        <label>標準：
+            <select id="standardSelect">
+                <option value="">選擇標準</option>
+            </select>
+        </label>
+
+        <label>點數：
+            <input type="number" id="scoreInput" placeholder="可自動帶入">
+        </label>
+
+        <button id="addButton">新增資料</button>
+        <button id="top5Button">顯示前 5 名</button>
+        <a href="top30.html"><button id="top30Button">全校排行榜前30名</button></a>
+        <a href="top6.html"><button id="top6Btn">各班前6名</button></a>
+        <a href="classAllRank.html"><button id="classAllRankBtn">各班所有學生排行榜</button></a>
+        <a href="today.html"><button id="todayBtn">今日新增資料</button></a>
+    </div>
+
+    <!-- 排行榜表格 -->
+    <table id="top30Table" border="1" style="margin-top:10px; display:none;">
+        <thead>
+            <tr>
+                <th>排名</th>
+                <th>班級</th>
+                <th>座號</th>
+                <th>姓名</th>
+                <th>總點數</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <!-- 集點資料表格 -->
+    <table id="pointsTable">
+        <tbody></tbody>
+    </table>
+
+    <!-- JS -->
+    <script src="main.js"></script>
+</body>
+
+</html>

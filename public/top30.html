@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>全校前30名排行榜</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #fafafa; }
+    .header {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 20px;
+      gap: 20px;
+    }
+    h1 { margin: 0; }
+    .back-btn {
+      padding: 6px 12px;
+      font-size: 14px;
+      border: none;
+      border-radius: 6px;
+      background: #1976d2;
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .back-btn:hover { background: #0d47a1; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      box-shadow: 2px 2px 6px rgba(0,0,0,0.1);
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: center;
+      font-size: 14px;
+    }
+    th { background: #eee; }
+    .gold   { background: #fff8dc; font-weight: bold; color: #d4af37; }
+    .silver { background: #f0f0f0; font-weight: bold; color: #a9a9a9; }
+    .bronze { background: #fdf5e6; font-weight: bold; color: #cd7f32; }
+    .hot-icon {
+      font-size: 16px;
+      margin-left: 5px;
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>全校前30名排行榜</h1>
+    <button class="back-btn" onclick="location.href='index.html'">返回首頁</button>
+  </div>
+
+  <table id="top30Table">
+    <tr>
+      <th>名次</th>
+      <th>班級</th>
+      <th>座號</th>
+      <th>姓名</th>
+      <th>總分</th>
+    </tr>
+  </table>
+
+  <script>
+    async function fetchTop30() {
+      try {
+        const res = await fetch('/api/top30'); // 呼叫後端 API
+        const data = await res.json();
+
+        const table = document.getElementById("top30Table");
+        data.forEach((s, i) => {
+          let rowClass = '';
+          let medal = '';
+          if (i === 0) { rowClass = 'gold'; medal = '🥇'; }
+          else if (i === 1) { rowClass = 'silver'; medal = '🥈'; }
+          else if (i === 2) { rowClass = 'bronze'; medal = '🥉'; }
+
+          // hot 標籤（後端判斷 isHot）
+          const hot = s.isHot ? '<span class="hot-icon">🔥</span>' : '';
+
+          const tr = document.createElement("tr");
+          tr.className = rowClass;
+          tr.innerHTML = `
+            <td>${medal || (i+1)} ${hot}</td>
+            <td>${s.class}</td>
+            <td>${s.seat_no}</td>
+            <td>${s.name}</td>
+            <td>${s.total_score}</td>
+          `;
+          table.appendChild(tr);
+        });
+      } catch (err) {
+        console.error("載入失敗", err);
+      }
+    }
+
+    fetchTop30();
+  </script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+body { font-family: Arial, sans-serif; padding: 20px; background: #f0f8ff; }
+h1 {
+    font-size: 48px;        /* 字體變大 */
+    font-weight: bold;
+    text-align: center;     /* 置中 */
+    color: #0066cc;         /* 標題顏色 */
+    margin: 20px 0;
+}
+table { border-collapse: collapse; width: 100%; }
+th, td { padding: 8px 12px; text-align: center; }
+th { background-color: #3399ff; color: white; }
+tr:nth-child(even) { background-color: #e6f2ff; }

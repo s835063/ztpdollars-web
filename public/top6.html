@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>各班前6名排行榜</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #fafafa; }
+    .header {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 20px;
+      gap: 20px;
+    }
+    h1 { margin: 0; }
+    .back-btn {
+      padding: 6px 12px;
+      font-size: 14px;
+      border: none;
+      border-radius: 6px;
+      background: #1976d2;
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .back-btn:hover {
+      background: #0d47a1;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+    .class-card {
+      border: 2px solid #ccc;
+      border-radius: 10px;
+      padding: 10px;
+      background: #fff;
+      box-shadow: 2px 2px 6px rgba(0,0,0,0.1);
+    }
+    .class-title {
+      font-weight: bold;
+      text-align: center;
+      margin-bottom: 10px;
+      padding: 5px;
+      border-radius: 6px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 5px;
+      text-align: center;
+      font-size: 14px;
+    }
+    th { background: #eee; }
+
+    /* 前三名特效 */
+    .gold   { background: #fff8dc; font-weight: bold; color: #d4af37; }
+    .silver { background: #f0f0f0; font-weight: bold; color: #a9a9a9; }
+    .bronze { background: #fdf5e6; font-weight: bold; color: #cd7f32; }
+
+    /* HOT 標籤 */
+    .hot {
+      color: red;
+      font-weight: bold;
+      margin-left: 5px;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>中壇幣各班前6名排行榜</h1>
+    <button class="back-btn" onclick="location.href='index.html'">返回首頁</button>
+  </div>
+  <div class="grid" id="classGrid"></div>
+
+  <script>
+    const classOrder = [
+      "一年忠班","二年忠班","三年忠班","三年孝班",
+      "四年忠班","五年忠班","五年孝班","六年忠班","六年孝班"
+    ];
+
+    const classColors = {
+      "一年忠班": "#7EB426",
+      "二年忠班": "#f0e055ff",
+      "三年忠班": "#FFF3E0",
+      "三年孝班": "#FCE4EC",
+      "四年忠班": "#f084cfff",
+      "五年忠班": "#f3e86aff",
+      "五年孝班": "#66f1d3ff",
+      "六年忠班": "#f39d93ff",
+      "六年孝班": "#a27ddaff"
+    };
+
+    async function fetchTop6() {
+      try {
+        const res = await fetch('/api/points');
+        const data = await res.json();
+
+        const grouped = {};
+        data.forEach(d => {
+          if (!grouped[d.class]) grouped[d.class] = {};
+          if (!grouped[d.class][d.name]) grouped[d.class][d.name] = 0;
+          grouped[d.class][d.name] += d.score;
+        });
+
+        const grid = document.getElementById("classGrid");
+
+        // 讀取 localStorage 保存的 hot 標籤
+        let hotData = JSON.parse(localStorage.getItem("hotTop6")) || {};
+
+        classOrder.forEach(cls => {
+          const students = Object.entries(grouped[cls] || {})
+            .map(([name, score]) => ({name, score}))
+            .sort((a,b) => b.score - a.score)
+            .slice(0,6);
+
+          const card = document.createElement("div");
+          card.className = "class-card";
+
+          let rows = students.map((s, i) => {
+            let rowClass = '';
+            let medal = '';
+            if (i === 0) { rowClass = 'gold'; medal = '🥇'; }
+            else if (i === 1) { rowClass = 'silver'; medal = '🥈'; }
+            else if (i === 2) { rowClass = 'bronze'; medal = '🥉'; }
+
+            const key = `${cls}-${s.name}`;
+            const now = Date.now();
+            let hotMark = "";
+
+            if (!hotData[key]) {
+              // 新進榜 → 標記 HOT 並記錄時間
+              hotData[key] = now;
+              hotMark = '<span class="hot">🔥HOT</span>';
+            } else {
+              // 檢查是否超過 7 天
+              const diffDays = (now - hotData[key]) / (1000 * 60 * 60 * 24);
+              if (diffDays <= 7) {
+                hotMark = '<span class="hot">🔥HOT</span>';
+              }
+            }
+
+            return `
+              <tr class="${rowClass}">
+                <td>${medal || i+1}</td>
+                <td>${s.name} ${hotMark}</td>
+                <td>${s.score}</td>
+              </tr>
+            `;
+          }).join("");
+
+          card.innerHTML = `
+            <div class="class-title" style="background:${classColors[cls] || '#ddd'}">
+              ${cls}
+            </div>
+            <table>
+              <tr><th>名次</th><th>姓名</th><th>總分</th></tr>
+              ${rows}
+            </table>
+          `;
+          grid.appendChild(card);
+        });
+
+        // 更新 localStorage
+        localStorage.setItem("hotTop6", JSON.stringify(hotData));
+
+      } catch (err) {
+        console.error("載入失敗", err);
+      }
+    }
+
+    fetchTop6();
+  </script>
+</body>
+</html>
